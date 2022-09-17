@@ -344,8 +344,6 @@ class PullCLI(CLI):
                 break
             else:
                 errors.append("%s: %s" % (req_path, PullCLI.PLAYBOOK_ERRORS[rc]))
-        if requirements is None:
-            display.warning("\n".join(errors))
         return requirements
 
     @staticmethod
