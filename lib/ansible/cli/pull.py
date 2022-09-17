@@ -260,15 +260,17 @@ class PullCLI(CLI):
             return 0
 
         # Install Galaxy Requirements
-        requirements = self.select_requirements(context.CLIARGS['dest'])
-        if requirements is not None:
-            cmd = '%s/ansible-galaxy install --role-file %s' % (bin_path, requirements)
-            display.vvvv('running %s' % cmd)
-            os.chdir(context.CLIARGS['dest'])
-            rc, b_out, b_err = run_cmd(cmd, live=True)
+        requirement_types = ['roles', 'collections']
+        for requirement_type in requirement_types:
+            requirement_file = self.select_requirements_file(context.CLIARGS['dest'], requirement_type)
+            if requirement_file is not None:
+                cmd = '%s/ansible-galaxy install --role-file %s --download-path %s' % (bin_path, requirement_file, context.CLIARGS['dest'])
+                display.vvvv('running %s' % cmd)
+                os.chdir(context.CLIARGS['dest'])
+                rc, b_out, b_err = run_cmd(cmd, live=True)
 
-            if rc != 0:
-                display.warning('unable to run galaxy install: %s' % b_err)
+                if rc != 0:
+                    display.warning('unable to run galaxy install: %s' % b_err)
 
         playbook = self.select_playbook(context.CLIARGS['dest'])
         if playbook is None:
@@ -330,10 +332,10 @@ class PullCLI(CLI):
         return 0
 
     @staticmethod
-    def select_requirements(path):
+    def select_requirements_file(path, type):
         requirements = None
         errors = []
-        files = ['roles/requirements.yml', 'roles/requirements.yaml']
+        files = [f'{type}/requirements.yml', f'{type}/requirements.yaml']
         for req in files:
             req_path = os.path.join(path, req)
             rc = PullCLI.try_file(req_path)
